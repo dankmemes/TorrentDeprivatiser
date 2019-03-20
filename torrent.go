@@ -92,10 +92,8 @@ func newFileFromTorrent(torrent *Torrent) error {
 	return nil
 }
 
-func work(fileName string, worker *sync.WaitGroup) error {
+func work(path string, worker *sync.WaitGroup) error {
 	defer worker.Done()
-
-	path := arguments.Input + "/" + fileName
 
 	torrent, err := newTorrentFromFile(path)
 	if err != nil {

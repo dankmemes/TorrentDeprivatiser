@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/labstack/gommon/color"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -13,9 +13,10 @@ var checkPre = color.Yellow("[") + color.Green("✓") + color.Yellow("]")
 var tildPre = color.Yellow("[") + color.Green("~") + color.Yellow("]")
 var crossPre = color.Yellow("[") + color.Red("✗") + color.Yellow("]")
 
+var worker sync.WaitGroup
+var count int
+
 func main() {
-	var worker sync.WaitGroup
-	var count int
 	var err error
 
 	// Parse arguments
@@ -35,33 +36,43 @@ func main() {
 		log.Fatal(err)
 	}
 
-	files, err := ioutil.ReadDir(arguments.Input)
+	err = filepath.Walk(arguments.Input, WalkFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, f := range files {
-		worker.Add(1)
-		count++
+	worker.Wait()
+}
 
-		go func(f os.FileInfo) {
-			err := work(f.Name(), &worker)
-
-			if err != nil {
-				fmt.Println(crossPre +
-					color.Yellow(" [") +
-					color.Red(f.Name()) +
-					color.Yellow("] ") +
-					color.Red("Error: ") +
-					color.Yellow(err.Error()))
-			}
-		}(f)
-
-		if count == arguments.Concurrency {
-			worker.Wait()
-			count = 0
-		}
+func WalkFile(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
 	}
 
-	worker.Wait()
+	if info.IsDir() {
+		return nil
+	}
+
+	worker.Add(1)
+	count++
+
+	go func(path string) {
+		err := work(path, &worker)
+
+		if err != nil {
+			fmt.Println(crossPre +
+				color.Yellow(" [") +
+				color.Red(path) +
+				color.Yellow("] ") +
+				color.Red("Error: ") +
+				color.Yellow(err.Error()))
+		}
+	}(path)
+
+	if count == arguments.Concurrency {
+		worker.Wait()
+		count = 0
+	}
+
+	return nil
 }
