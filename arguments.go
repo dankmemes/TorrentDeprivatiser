@@ -11,6 +11,7 @@ var arguments = struct {
 	Input        string
 	Concurrency  int
 	TrackersFile string
+	SetPrivate   bool
 }{}
 
 func parseArgs(args []string) {
@@ -23,13 +24,15 @@ func parseArgs(args []string) {
 		Help:     "Input directory"})
 
 	concurrency := parser.Int("j", "concurrency", &argparse.Options{
-		Required: false,
-		Help:     "Concurrency",
-		Default:  4})
+		Help:    "Concurrency",
+		Default: 4})
 
 	trackersFile := parser.String("t", "trackers", &argparse.Options{
 		Required: true,
 		Help:     "Tracker list file"})
+
+	setPrivate := parser.Flag("p", "private", &argparse.Options{
+		Help: "Set the torrent private"})
 
 	// Parse input
 	err := parser.Parse(args)
@@ -44,4 +47,5 @@ func parseArgs(args []string) {
 	arguments.Input = *input
 	arguments.Concurrency = *concurrency
 	arguments.TrackersFile = *trackersFile
+	arguments.SetPrivate = *setPrivate
 }

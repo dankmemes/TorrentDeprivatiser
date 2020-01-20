@@ -100,7 +100,12 @@ func work(path string, worker *sync.WaitGroup) error {
 		return err
 	}
 
-	torrent.Data.Info.Private = 0
+	var private int
+	if arguments.SetPrivate {
+		private = 1
+	}
+
+	torrent.Data.Info.Private = private
 	torrent.Data.Announce = trackerList[0][0]
 	torrent.Data.AnnounceList = trackerList
 
